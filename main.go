@@ -1,6 +1,8 @@
 package main
 
-import "learn_golang/handler"
+import (
+	"learn_golang/handler"
+)
 
 func main() {
 	handler.SayHello()
@@ -9,4 +11,8 @@ func main() {
 	println(candy(a))
 	b := [][]int{{7, 0}, {4, 4}, {7, 1}, {5, 0}, {6, 1}, {5, 2}}
 	println(reconstructQueue(b))
+	strA := "ADOBECODEBANC"
+	strB := "ABC"
+	println(minWindow(strA, strB))
+	handler.SayHello()
 }
