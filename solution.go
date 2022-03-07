@@ -1,6 +1,7 @@
 package main
 
 import (
+	"container/heap"
 	"fmt"
 	"math"
 	"math/rand"
@@ -422,9 +423,9 @@ type Trie struct {
 	isEnd    bool
 }
 
-func Constructor() Trie {
-	return Trie{}
-}
+//func Constructor() Trie {
+//	return Trie{}
+//}
 
 func (t *Trie) Insert(word string) {
 	node := t
@@ -457,4 +458,234 @@ func (t *Trie) searchPrefix(prefix string) *Trie {
 		node = node.children[ch]
 	}
 	return node
+}
+
+func hammingWeight(num uint32) (ones int) {
+	for i := 0; i < 32; i++ {
+		if (1 << i & num) > 0 {
+			ones++
+		}
+	}
+	return
+}
+
+func kthSmallest(root *TreeNode, k int) int {
+	stack := make([]*TreeNode, 0)
+	for {
+		for root != nil {
+			stack = append(stack, root)
+			root = root.Left
+		}
+
+		stack, root = stack[:len(stack)-1], stack[len(stack)-1]
+		k--
+		if k == 0 {
+			return root.Val
+		}
+
+		root = root.Right
+	}
+}
+
+type KthLargest struct {
+	sort.IntSlice
+	k int
+}
+
+func Constructor(k int, nums []int) KthLargest {
+	kl := KthLargest{k: k}
+	for _, val := range nums {
+		kl.Add(val)
+	}
+	return kl
+}
+
+func (kl *KthLargest) Push(v interface{}) {
+	kl.IntSlice = append(kl.IntSlice, v.(int))
+}
+
+func (kl *KthLargest) Pop() interface{} {
+	a := kl.IntSlice
+	v := a[len(a)-1]
+	kl.IntSlice = a[:len(a)-1]
+	return v
+}
+
+func (kl *KthLargest) Add(val int) int {
+	// pop 和 push必须要是大写的公有方法才能调用
+	heap.Push(kl, val)
+	if kl.Len() > kl.k {
+		heap.Pop(kl)
+	}
+	// 堆？ 最大为root
+	return kl.IntSlice[0]
+}
+
+func findMin(nums []int) int {
+	left, right := 0, len(nums)-1
+	for left < right {
+		mid := left + (right-left)/2
+		if nums[mid] > nums[right] {
+			left = mid + 1
+		} else if nums[mid] < nums[right] {
+			right = mid
+		} else {
+			right--
+		}
+	}
+	return nums[left]
+}
+
+func findLength(A []int, B []int) int {
+	aLen, bLen := len(A), len(B)
+	ans := 0
+
+	// B不动，A滚动
+	// A从i开始，B从0开始，取两节公共部分的重合处做对比
+	for i := 0; i < aLen; i++ {
+		len := min(bLen, aLen-i)
+		maxLen := maxLength(A, i, B, 0, len)
+		ans = max(maxLen, ans)
+	}
+
+	// A不动，B滚动
+	// B从i开始，A从0开始，取两节公共部分的重合处做对比
+	for i := 0; i < bLen; i++ {
+		len := min(aLen, bLen-i)
+		maxLen := maxLength(A, 0, B, i, len)
+		ans = max(ans, maxLen)
+	}
+
+	return ans
+}
+
+// 公共部分的重复子串比较
+func maxLength(A []int, aIdx int, B []int, bIdx, lenCommon int) int {
+	ans := 0
+	cnt := 0
+	for i := 0; i < lenCommon; i++ {
+		if A[aIdx+i] == B[bIdx+i] {
+			cnt++
+		} else {
+			cnt = 0
+		}
+		ans = max(ans, cnt)
+	}
+	return ans
+}
+
+func getIntersectionNode(headA, headB *ListNode) *ListNode {
+	tmpA, tmpB := headA, headB
+
+	for tmpA != tmpB {
+		if tmpA == nil {
+			tmpA = headB
+		} else {
+			tmpA = tmpA.Next
+		}
+
+		if tmpB == nil {
+			tmpB = headA
+		} else {
+			tmpB = tmpB.Next
+		}
+
+		//// 错误：转换也算走了一步！！！！
+		//if tmpA == nil {
+		//	tmpA = headB
+		//}
+		//if tmpB == nil {
+		//	tmpB = headA
+		//}
+		//
+		//tmpA = tmpA.Next
+		//tmpB = tmpB.Next
+	}
+	return tmpB
+}
+
+func mergeTwoLists(list1 *ListNode, list2 *ListNode) *ListNode {
+	preNode := &ListNode{Val: -1}
+	tmp := preNode
+
+	for list1 != nil && list2 != nil {
+		if list1.Val < list2.Val {
+			tmp.Next = list1
+			list1 = list1.Next
+		} else {
+			tmp.Next = list2
+			list2 = list2.Next
+		}
+		tmp = tmp.Next
+	}
+
+	if list1 != nil {
+		tmp.Next = list1
+	}
+
+	if list2 != nil {
+		tmp.Next = list2
+	}
+
+	return preNode.Next
+}
+
+func search(nums []int, target int) int {
+	left, right := 0, len(nums)-1
+	for left <= right {
+		mid := left + (right-left)/2
+		if nums[mid] > target {
+			right = mid - 1
+		} else if nums[mid] < target {
+			left = mid + 1
+		} else {
+			return mid
+		}
+	}
+	return -1
+}
+
+func twoSumV2(nums []int, target int) []int {
+	m := make(map[int]int)
+	for idx, n := range nums {
+		tIdx, ok := m[target-n]
+		if ok {
+			return []int{tIdx, idx}
+		} else {
+			m[n] = idx
+		}
+	}
+	return []int{-1, -1}
+}
+
+func sortArray(nums []int) []int {
+	randomizedQuicksort(nums, 0, len(nums)-1)
+	return nums
+}
+
+func randomizedQuicksort(nums []int, left, right int) {
+	if left < right {
+		pos := randomizedPartition(nums, left, right)
+		randomizedQuicksort(nums, left, pos-1)
+		randomizedQuicksort(nums, pos+1, right)
+	}
+}
+
+func randomizedPartition(nums []int, left, right int) int {
+	r := rand.Intn(right-left+1) + left
+	swap(nums, r, right)
+	return partition(nums, left, right)
+}
+
+func partition(nums []int, left, right int) int {
+	pivot := nums[right]
+	swapIdx := left - 1
+	for j := left; j <= right-1; j++ {
+		if nums[j] <= pivot {
+			swapIdx++
+			swap(nums, swapIdx, j)
+		}
+	}
+	swap(nums, swapIdx+1, right)
+	return swapIdx + 1
 }

@@ -116,3 +116,15 @@ func min(i, j int) int {
 	}
 	return i
 }
+
+func swap(nums []int, i, j int) {
+	t := nums[i]
+	nums[i] = nums[j]
+	nums[j] = t
+}
+
+type TreeNode struct {
+	Val   int
+	Left  *TreeNode
+	Right *TreeNode
+}
