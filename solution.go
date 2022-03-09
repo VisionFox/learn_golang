@@ -1,11 +1,11 @@
 package main
 
 import (
-	"container/heap"
 	"fmt"
 	"math"
 	"math/rand"
 	"sort"
+	"strconv"
 )
 
 func findContentChildren(g []int, s []int) int {
@@ -392,74 +392,6 @@ func partitionDisjointV2(nums []int) int {
 	return leftPos + 1
 }
 
-type Solution struct {
-	pre []int
-}
-
-//func Constructor(w []int) Solution {
-//	// 计算前缀和
-//	pre := make([]int, len(w))
-//	pre[0] = w[0]
-//	for i := 1; i < len(w); i++ {
-//		pre[i] = pre[i-1] + w[i]
-//	}
-//
-//	return Solution{
-//		pre: pre,
-//	}
-//}
-
-func (s *Solution) PickIndex() int {
-	// 注意，生成的随机数不能包含0，否则部分用例过不了
-	r := rand.Intn(s.pre[len(s.pre)-1]) + 1
-	// 判断rand的范围落在哪个区间
-	// Search(len(a), func(i int) bool { return a[i] >= x })
-	// return i
-	return sort.SearchInts(s.pre, r)
-}
-
-type Trie struct {
-	children [26]*Trie
-	isEnd    bool
-}
-
-//func Constructor() Trie {
-//	return Trie{}
-//}
-
-func (t *Trie) Insert(word string) {
-	node := t
-	for _, ch := range word {
-		ch -= 'a'
-		if node.children[ch] == nil {
-			node.children[ch] = &Trie{}
-		}
-		node = node.children[ch]
-	}
-	node.isEnd = true
-}
-
-func (t *Trie) Search(word string) bool {
-	node := t.searchPrefix(word)
-	return node != nil && node.isEnd == true
-}
-
-func (t *Trie) StartsWith(prefix string) bool {
-	return t.searchPrefix(prefix) != nil
-}
-
-func (t *Trie) searchPrefix(prefix string) *Trie {
-	node := t
-	for _, ch := range prefix {
-		ch -= 'a'
-		if node.children[ch] == nil {
-			return nil
-		}
-		node = node.children[ch]
-	}
-	return node
-}
-
 func hammingWeight(num uint32) (ones int) {
 	for i := 0; i < 32; i++ {
 		if (1 << i & num) > 0 {
@@ -485,40 +417,6 @@ func kthSmallest(root *TreeNode, k int) int {
 
 		root = root.Right
 	}
-}
-
-type KthLargest struct {
-	sort.IntSlice
-	k int
-}
-
-func Constructor(k int, nums []int) KthLargest {
-	kl := KthLargest{k: k}
-	for _, val := range nums {
-		kl.Add(val)
-	}
-	return kl
-}
-
-func (kl *KthLargest) Push(v interface{}) {
-	kl.IntSlice = append(kl.IntSlice, v.(int))
-}
-
-func (kl *KthLargest) Pop() interface{} {
-	a := kl.IntSlice
-	v := a[len(a)-1]
-	kl.IntSlice = a[:len(a)-1]
-	return v
-}
-
-func (kl *KthLargest) Add(val int) int {
-	// pop 和 push必须要是大写的公有方法才能调用
-	heap.Push(kl, val)
-	if kl.Len() > kl.k {
-		heap.Pop(kl)
-	}
-	// 堆？ 最大为root
-	return kl.IntSlice[0]
 }
 
 func findMin(nums []int) int {
@@ -688,4 +586,210 @@ func partition(nums []int, left, right int) int {
 	}
 	swap(nums, swapIdx+1, right)
 	return swapIdx + 1
+}
+
+func maxSubArray(nums []int) int {
+	dp := make([]int, len(nums))
+	dp[0] = nums[0]
+	ans := nums[0]
+	for i := 1; i < len(nums); i++ {
+		dp[i] = max(dp[i-1]+nums[i], nums[i])
+		ans = max(dp[i], ans)
+	}
+	return ans
+}
+
+func reverseList(head *ListNode) *ListNode {
+	if head == nil || head.Next == nil {
+		return head
+	}
+
+	var pre *ListNode
+	cur := head
+	for cur != nil {
+		next := cur.Next
+		cur.Next = pre
+		pre = cur
+		cur = next
+	}
+	return pre
+}
+
+func reverseListV2(head *ListNode) *ListNode {
+	if head == nil || head.Next == nil {
+		return head
+	}
+	newHead := reverseList(head.Next)
+	head.Next.Next = head
+	head.Next = nil
+	return newHead
+}
+
+func getKthFromEnd(head *ListNode, k int) *ListNode {
+	fast, slow := head, head
+	for fast != nil && k > 0 {
+		fast = fast.Next
+		k--
+	}
+	for fast != nil {
+		fast = fast.Next
+		slow = slow.Next
+	}
+	return slow
+}
+
+func largestNumber(nums []int) string {
+	sort.Slice(nums, func(i, j int) bool {
+		str1 := fmt.Sprintf("%d%d", nums[i], nums[j])
+		str2 := fmt.Sprintf("%d%d", nums[j], nums[i])
+
+		if str1 > str2 {
+			return true
+		} else {
+			return false
+		}
+	})
+
+	if nums[0] == 0 {
+		return "0"
+	}
+
+	ans := ""
+	for _, num := range nums {
+		ans += strconv.Itoa(num)
+	}
+	return ans
+}
+
+func maxSlidingWindow(nums []int, k int) []int {
+	if len(nums) < 2 {
+		return nums
+	}
+
+	queue := make([]int, 0)
+	ans := make([]int, len(nums)-k+1)
+	for i := 0; i < len(nums); i++ {
+		for len(queue) > 0 && nums[queue[len(queue)-1]] <= nums[i] {
+			queue = queue[0 : len(queue)-1]
+		}
+
+		queue = append(queue, i)
+
+		if queue[0] <= i-k {
+			queue = queue[1:]
+		}
+
+		if i+1 >= k {
+			ans[i+1-k] = nums[queue[0]]
+		}
+	}
+	return ans
+}
+
+func preorderTraversal(root *TreeNode) []int {
+	ans := make([]int, 0)
+
+	var preorder func(node *TreeNode)
+
+	preorder = func(node *TreeNode) {
+		if node == nil {
+			return
+		}
+		ans = append(ans, node.Val)
+		preorder(node.Left)
+		preorder(node.Right)
+	}
+
+	preorder(root)
+
+	return ans
+}
+
+func preorderTraversalV2(root *TreeNode) []int {
+	// 存个根
+	stack := make([]*TreeNode, 0)
+	ans := make([]int, 0)
+	node := root
+
+	for node != nil || len(stack) > 0 {
+		for node != nil {
+			ans = append(ans, node.Val)
+			stack = append(stack, node)
+			node = node.Left
+		}
+
+		node = stack[len(stack)-1].Right
+		stack = stack[:len(stack)-1]
+	}
+	return ans
+}
+
+func deleteDuplicates(head *ListNode) *ListNode {
+	if head == nil {
+		return head
+	}
+
+	dummy := &ListNode{Val: 0, Next: head}
+
+	cur := dummy
+	for cur.Next != nil && cur.Next.Next != nil {
+		if cur.Next.Val != cur.Next.Next.Val {
+			cur = cur.Next
+		} else {
+			tmp := cur.Next.Val
+			for cur.Next != nil && tmp == cur.Next.Val {
+				cur.Next = cur.Next.Next
+			}
+		}
+	}
+	return dummy.Next
+}
+
+func addTwoNumbers(l1 *ListNode, l2 *ListNode) *ListNode {
+	stack1 := make([]*ListNode, 0)
+	stack2 := make([]*ListNode, 0)
+
+	for l1 != nil {
+		stack1 = append(stack1, l1)
+		l1 = l1.Next
+	}
+
+	for l2 != nil {
+		stack2 = append(stack2, l2)
+		l2 = l2.Next
+	}
+
+	var ans *ListNode
+
+	carry := 0
+	for len(stack1) > 0 || len(stack2) > 0 {
+		A := 0
+		if len(stack1) > 0 {
+			A = stack1[len(stack1)-1].Val
+			stack1 = stack1[:len(stack1)-1]
+		}
+
+		B := 0
+		if len(stack2) > 0 {
+			B = stack2[len(stack2)-1].Val
+			stack2 = stack2[:len(stack2)-1]
+		}
+
+		curNum := (A + B + carry) % 10
+		carry = (A + B + carry) / 10
+
+		ans = &ListNode{
+			Val:  curNum,
+			Next: ans,
+		}
+	}
+
+	if carry > 0 {
+		ans = &ListNode{
+			Val:  carry,
+			Next: ans,
+		}
+	}
+
+	return ans
 }
