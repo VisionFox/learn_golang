@@ -793,3 +793,92 @@ func addTwoNumbers(l1 *ListNode, l2 *ListNode) *ListNode {
 
 	return ans
 }
+
+func reverseBetween(head *ListNode, left int, right int) *ListNode {
+	dummy := &ListNode{Val: -1, Next: head}
+	g, p := dummy, dummy.Next
+
+	for i := 0; i < left-1; i++ {
+		// g 走到left-1的位置
+		g = g.Next
+		// p 走到要逆转的位置
+		p = p.Next
+	}
+
+	for i := 0; i < right-left; i++ {
+		remove := p.Next
+
+		p.Next = p.Next.Next
+		remove.Next = g.Next
+		g.Next = remove
+	}
+
+	return dummy.Next
+}
+
+func spiralOrder(matrix [][]int) []int {
+	if len(matrix) == 0 {
+		return make([]int, 0)
+	}
+
+	ans := make([]int, 0)
+	up, down, left, right := 0, len(matrix)-1, 0, len(matrix[0])-1
+	for true {
+		for i := left; i <= right; i++ {
+			ans = append(ans, matrix[up][i])
+		}
+		up++
+		if up > down {
+			break
+		}
+
+		for i := up; i <= down; i++ {
+			ans = append(ans, matrix[i][right])
+		}
+		right--
+		if right < left {
+			break
+		}
+
+		for i := right; i >= left; i-- {
+			ans = append(ans, matrix[down][i])
+		}
+		down--
+		if down < up {
+			break
+		}
+
+		for i := down; i >= up; i-- {
+			ans = append(ans, matrix[i][left])
+		}
+		left++
+		if left > right {
+			break
+		}
+	}
+	return ans
+}
+
+func nextPermutation(nums []int) {
+	if len(nums) <= 1 {
+		return
+	}
+
+	i, j, k := len(nums)-2, len(nums)-1, len(nums)-1
+
+	for i >= 0 && nums[i] >= nums[j] {
+		i--
+		j--
+	}
+
+	if i >= 0 {
+		for nums[i] >= nums[k] {
+			k--
+		}
+		nums[i], nums[k] = nums[k], nums[i]
+	}
+
+	for i, j := j, len(nums)-1; i < j; i, j = i+1, j-1 {
+		nums[i], nums[j] = nums[j], nums[i]
+	}
+}

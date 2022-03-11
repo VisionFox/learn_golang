@@ -7,6 +7,14 @@ type ListNode struct {
 	Next *ListNode
 }
 
+type Node struct {
+	Val    int
+	Next   *Node
+	Random *Node
+	Left   *Node
+	Right  *Node
+}
+
 type IList interface {
 }
 
