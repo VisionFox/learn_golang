@@ -882,3 +882,125 @@ func nextPermutation(nums []int) {
 		nums[i], nums[j] = nums[j], nums[i]
 	}
 }
+
+func mySqrt(x int) int {
+	if x == 0 || x == 1 {
+		return x
+	}
+
+	left, right := 1, x/2
+	// 在区间 [left..right] 查找目标元素
+	for left < right {
+		mid := left + (right-left+1)/2
+		if mid*mid > x {
+			// 下一轮搜索区间是 [left..mid - 1]
+			right = mid - 1
+		} else {
+			// 下一轮搜索区间是 [mid..right]
+			left = mid
+		}
+	}
+	return left
+}
+
+func bstFromPreorder(preorder []int) *TreeNode {
+	if len(preorder) == 0 {
+		return nil
+	}
+
+	root := &TreeNode{Val: preorder[0]}
+	preorder = preorder[1:]
+
+	splitIdx := 0
+	for i := 0; i < len(preorder); i++ {
+		if preorder[i] > root.Val {
+			break
+		}
+		splitIdx++
+	}
+
+	root.Left = bstFromPreorder(preorder[:splitIdx])
+	root.Right = bstFromPreorder(preorder[splitIdx:])
+	return root
+}
+
+func jump(nums []int) int {
+	// 贪心：每次跳，都要选择这段区间内，在下一次能跳最远的地方
+	maxPos, lastEnd, step := 0, 0, 0
+	// 最后一个数不用管
+	for i := 0; i < len(nums)-1; i++ {
+		maxPos = max(maxPos, i+nums[i])
+		if i == lastEnd {
+			lastEnd = maxPos
+			step++
+		}
+	}
+	return step
+}
+
+func rotate(matrix [][]int) {
+	size := len(matrix)
+
+	for row := 0; row < size; row++ {
+		for col := 0; col < row; col++ {
+			temp := matrix[row][col]
+			matrix[row][col] = matrix[col][row]
+			matrix[col][row] = temp
+		}
+	}
+
+	for row := 0; row < size; row++ {
+		for left, right := 0, size-1; left < right; {
+			temp := matrix[row][left]
+			matrix[row][left] = matrix[row][right]
+			matrix[row][right] = temp
+			left++
+			right--
+		}
+	}
+}
+
+func find132pattern(nums []int) bool {
+	// 1:minIdx 3:maxIdx 2:midIdx
+	// 从后往前遍历的单调递减栈：存储的是：2：midIdx:maxValue
+	// 而弹出的是3:maxIdx:midValue
+	// 遍历时，当有3:midValue > 1:minValue时则满足题意
+	stack := make([]int, 0)
+	midValue := math.MinInt
+
+	for i := len(nums) - 1; i >= 0; i-- {
+		if midValue > nums[i] {
+			return true
+		}
+
+		for len(stack) > 0 && stack[len(stack)-1] < nums[i] {
+			midValue = max(midValue, stack[len(stack)-1])
+			stack = stack[:len(stack)-1]
+		}
+		stack = append(stack, nums[i])
+	}
+
+	return false
+}
+
+func canCompleteCircuit(gas []int, cost []int) int {
+	for idxStart := 0; idxStart < len(gas); idxStart++ {
+		idxEnd, remain := idxStart, gas[idxStart]
+		for remain-cost[idxEnd] >= 0 {
+			idxNext := (idxEnd + 1) % len(gas)
+			remain -= cost[idxEnd] + gas[idxNext]
+			idxEnd = idxNext
+
+			if idxNext == idxStart {
+				return idxStart
+			}
+		}
+
+		if idxEnd < idxStart {
+			return -1
+		}
+
+		idxStart = idxEnd + 1
+	}
+	return -1
+}
