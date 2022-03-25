@@ -1,6 +1,9 @@
 package main
 
-import "errors"
+import (
+	"errors"
+	"strconv"
+)
 
 type ListNode struct {
 	Val  int
@@ -135,4 +138,13 @@ type TreeNode struct {
 	Val   int
 	Left  *TreeNode
 	Right *TreeNode
+}
+
+// 判断是否为全数字
+func isDigit(input string) bool {
+	_, err := strconv.Atoi(input)
+	if err != nil {
+		return false
+	}
+	return true
 }

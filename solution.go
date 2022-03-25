@@ -1004,3 +1004,103 @@ func canCompleteCircuit(gas []int, cost []int) int {
 	}
 	return -1
 }
+
+func permuteUnique(nums []int) [][]int {
+	var res [][]int
+	used := make([]bool, len(nums))
+	sort.Ints(nums)
+	helper([]int{}, nums, used, &res)
+	return res
+}
+
+func helper(path, nums []int, used []bool, res *[][]int) {
+	if len(path) == len(nums) {
+		temp := make([]int, len(nums))
+		copy(temp, path)
+		*res = append(*res, temp)
+		return
+	}
+
+	for i := 0; i < len(nums); i++ {
+		if i-1 >= 0 && nums[i-1] == nums[i] && !used[i-1] {
+			continue
+		}
+		if used[i] {
+			continue
+		}
+
+		path = append(path, nums[i])
+		used[i] = true
+
+		helper(path, nums, used, res)
+		path = path[0 : len(path)-1]
+
+		used[i] = false
+	}
+}
+
+func findBottomLeftValue(root *TreeNode) int {
+	queue := make([]*TreeNode, 0)
+	queue = append(queue, root)
+
+	var leftest *TreeNode
+	for len(queue) > 0 {
+		levelSize := len(queue)
+		leftest = queue[0]
+
+		for levelSize > 0 {
+			// 取尾错误
+			//node := queue[len(queue)-1]
+			//queue = queue[:len(queue)-1]
+			// 应该取头
+			node := queue[0]
+			queue = queue[1:]
+
+			levelSize--
+
+			if node.Left != nil {
+				queue = append(queue, node.Left)
+			}
+			if node.Right != nil {
+				queue = append(queue, node.Right)
+			}
+		}
+	}
+	return leftest.Val
+}
+
+func diffWaysToCompute(input string) []int {
+	// 如果是数字，直接返回
+	if isDigit(input) {
+		tmp, _ := strconv.Atoi(input)
+		return []int{tmp}
+	}
+
+	// 空切片
+	var ans []int
+	// 遍历字符串
+	for index, c := range input {
+		tmpC := string(c)
+		if tmpC == "+" || tmpC == "-" || tmpC == "*" {
+			// 如果是运算符，则计算左右两边的算式
+			left := diffWaysToCompute(input[:index])
+			right := diffWaysToCompute(input[index+1:])
+
+			for _, leftNum := range left {
+				for _, rightNum := range right {
+					var addNum int
+					if tmpC == "+" {
+						addNum = leftNum + rightNum
+					} else if tmpC == "-" {
+						addNum = leftNum - rightNum
+					} else {
+						addNum = leftNum * rightNum
+					}
+					ans = append(ans, addNum)
+				}
+			}
+		}
+	}
+
+	return ans
+}
