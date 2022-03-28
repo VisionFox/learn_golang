@@ -1104,3 +1104,85 @@ func diffWaysToCompute(input string) []int {
 
 	return ans
 }
+
+func findMedianSortedArrays(nums1 []int, nums2 []int) float64 {
+	left := (len(nums1) + len(nums2) + 1) / 2
+	right := (len(nums1) + len(nums2) + 2) / 2
+	return (findKth(nums1, 0, nums2, 0, left) + findKth(nums1, 0, nums2, 0, right)) / 2.0
+}
+
+func findKth(nums1 []int, idx1 int, nums2 []int, idx2 int, k int) float64 {
+	if idx1 >= len(nums1) {
+		return float64(nums2[idx2+k-1])
+	}
+	if idx2 >= len(nums2) {
+		return float64(nums1[idx1+k-1])
+	}
+
+	if k == 1 {
+		return float64(min(nums1[idx1], nums2[idx2]))
+	}
+
+	mid1Idx := idx1 + k/2 - 1
+	mid1Value := math.MaxInt
+
+	mid2Idx := idx2 + k/2 - 1
+	mid2Value := math.MaxInt
+
+	if mid1Idx < len(nums1) {
+		mid1Value = nums1[mid1Idx]
+	}
+
+	if mid2Idx < len(nums2) {
+		mid2Value = nums2[mid2Idx]
+	}
+
+	if mid1Value < mid2Value {
+		return findKth(nums1, mid1Idx+1, nums2, idx2, k-k/2)
+	} else {
+		return findKth(nums1, idx1, nums2, mid2Idx+1, k-k/2)
+	}
+}
+
+func maxProfit(k int, prices []int) int {
+	if 2*k > len(prices) {
+		return maxProfitGreedy(prices)
+	}
+
+	return maxProfitDp(k, prices)
+}
+
+func maxProfitDp(k int, prices []int) int {
+	buys := make([]int, k)
+	sells := make([]int, k)
+	for i := 0; i < k; i++ {
+		buys[i] = -prices[0]
+	}
+
+	ans := 0
+
+	for i := 1; i < len(prices); i++ {
+		price := prices[i]
+		for j := 0; j < k; j++ {
+			if j == 0 {
+				buys[j] = max(buys[j], 0-price)
+			} else {
+				buys[j] = max(buys[j], sells[j-1]-price)
+			}
+			sells[j] = max(sells[j], buys[j]+price)
+			ans = max(sells[j], ans)
+		}
+	}
+
+	return ans
+}
+
+func maxProfitGreedy(prices []int) int {
+	ans := 0
+	for i := 1; i < len(prices); i++ {
+		if prices[i] > prices[i-1] {
+			ans += prices[i] - prices[i-1]
+		}
+	}
+	return ans
+}
