@@ -1186,3 +1186,81 @@ func maxProfitGreedy(prices []int) int {
 	}
 	return ans
 }
+
+func maxArea(height []int) int {
+	left, right := 0, len(height)-1
+	ans := 0
+
+	for left < right {
+		minHeight := min(height[left], height[right])
+		area := minHeight * (right - left)
+		ans = max(ans, area)
+
+		if height[left] < height[right] {
+			left++
+		} else {
+			right--
+		}
+	}
+
+	return ans
+}
+
+func maxEnvelopes(envelopes [][]int) int {
+	sort.Slice(envelopes, func(iIdx, jIdx int) bool {
+		if envelopes[iIdx][0] != envelopes[jIdx][0] {
+			return envelopes[iIdx][0] < envelopes[jIdx][0]
+		} else {
+			return envelopes[iIdx][1] > envelopes[jIdx][1]
+		}
+	})
+
+	heights := make([]int, 0)
+	for _, wh := range envelopes {
+		heights = append(heights, wh[1])
+	}
+
+	return lengthOfLIS(heights)
+}
+
+func lengthOfLIS(nums []int) int {
+	size := len(nums)
+	if size < 2 {
+		return size
+	}
+
+	ans := 1
+	dp := make([]int, size)
+	for i := 0; i < size; i++ {
+		dp[i] = 1
+		for j := 0; j < i; j++ {
+			if nums[i] > nums[j] {
+				dp[i] = max(dp[i], dp[j]+1)
+				ans = max(dp[i], ans)
+			}
+		}
+	}
+
+	return ans
+}
+
+func maxEnvelopesV2(envelopes [][]int) int {
+	sort.Slice(envelopes, func(i, j int) bool {
+		a, b := envelopes[i], envelopes[j]
+		return a[0] < b[0] || a[0] == b[0] && a[1] > b[1]
+	})
+
+	dp := []int{}
+	for _, envelope := range envelopes {
+		height := envelope[1]
+		// 拓展：java也有类似的方法 Arrays.binarySearch
+		// 此法为二分搜索法，故查询前需要用sort()方法将数组排序，如果数组没有排序，则结果是不确定的
+		// 如果key在数组中，则返回搜索值的索引；否则返回-1或者”-“(插入点)。插入点是索引键将要插入数组的那一点，即第一个大于该键的元素索引。
+		if i := sort.SearchInts(dp, height); i < len(dp) {
+			dp[i] = height
+		} else {
+			dp = append(dp, height)
+		}
+	}
+	return len(dp)
+}
