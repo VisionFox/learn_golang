@@ -15,4 +15,6 @@ func main() {
 	strB := "ABC"
 	println(minWindow(strA, strB))
 	handler.SayHello()
+
+	printNumPlus(37, 3000)
 }
