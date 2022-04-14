@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"learn_golang/handler"
 )
 
@@ -16,5 +17,5 @@ func main() {
 	println(minWindow(strA, strB))
 	handler.SayHello()
 
-	printNumPlus(37, 3000)
+	fmt.Printf("%v\n", restoreIpAddresses("25525511135"))
 }

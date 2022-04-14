@@ -1264,3 +1264,383 @@ func maxEnvelopesV2(envelopes [][]int) int {
 	}
 	return len(dp)
 }
+
+func mergeRange(intervals [][]int) [][]int {
+	if len(intervals) < 2 {
+		return intervals
+	}
+
+	sort.Slice(intervals, func(i, j int) bool {
+		return intervals[i][0] < intervals[j][0]
+	})
+
+	ans := make([][]int, 0)
+	minLeft, maxRight := intervals[0][0], intervals[0][1]
+	for _, interval := range intervals {
+		if interval[0] > maxRight {
+			ans = append(ans, []int{minLeft, maxRight})
+			minLeft = interval[0]
+		}
+
+		maxRight = max(maxRight, interval[1])
+	}
+	ans = append(ans, []int{minLeft, maxRight})
+	return ans
+}
+
+func lowestCommonAncestor(root, p, q *TreeNode) *TreeNode {
+	if root == nil {
+		return nil
+	}
+
+	if root == p || root == q {
+		return root
+	}
+
+	leftTreeFindPOrQ := lowestCommonAncestor(root.Left, p, q)
+	rightTreeFindPOrQ := lowestCommonAncestor(root.Right, p, q)
+
+	//if leftTreeFindPOrQ != nil && rightTreeFindPOrQ != nil {
+	//	return root
+	//}
+
+	if leftTreeFindPOrQ == nil {
+		return rightTreeFindPOrQ
+	}
+
+	if rightTreeFindPOrQ == nil {
+		return leftTreeFindPOrQ
+	}
+
+	return root
+}
+
+func getPermutation(n int, k int) string {
+	//阶乘数组
+	factorials := make([]int, n+1)
+	factorials[0] = 1
+	for i := 1; i <= n; i++ {
+		factorials[i] = i * factorials[i-1]
+	}
+	// 查找全排列需要的布尔数组
+	// 剪枝需要
+	used := make([]bool, n+1)
+
+	path := make([]int, 0)
+	path = getPermutationDFS(n, 0, k, path, used, factorials)
+
+	ans := ""
+	for _, num := range path {
+		ans += strconv.Itoa(num)
+	}
+
+	return ans
+}
+
+func getPermutationDFS(n, selectCnt, k int, path []int, used []bool, factorials []int) []int {
+	if selectCnt == n {
+		return path
+	}
+
+	// 计算还未确定的数字的全排列的个数
+	// 第 1 次进入的时候是 n - 1
+	cnt := factorials[n-1-selectCnt]
+	for i := 1; i <= n; i++ {
+		// 之前父层选过了，需要跳过
+		if used[i] {
+			continue
+		}
+		// 遍历到的此层，余下的数还是达不到新k，需要此层1组1组的过滤
+		if cnt < k {
+			k -= cnt
+			continue
+		}
+
+		used[i] = true
+		path = append(path, i)
+		path = getPermutationDFS(n, selectCnt+1, k, path, used, factorials)
+		// path : 注意 1：不可以回溯（重置变量），算法设计是「一下子来到叶子结点」，没有回头的过程
+		// 注意 2：这里要加 return，后面的数没有必要遍历去尝试了
+		return path
+	}
+
+	return path
+}
+
+func lengthOfLISPlus(nums []int) int {
+	// tails[k] 的值代表 长度为 k+1 递增子序列 ，的尾部元素值。
+	tails := make([]int, 0)
+	// 一路填充，填成拥有最长递增子序列的长度
+	for _, num := range nums {
+		if idx := sort.SearchInts(tails, num); idx < len(tails) {
+			//  二分查找，找到第一个比num大的数的下标
+			//  找到插入位置，就是更新：长度为len=（idx+1）的递增子序列的尾部元素
+			//	更小的 nums[k] 后更可能接一个比它大的数字,方便以后num的插入
+			tails[idx] = num
+		} else {
+			tails = append(tails, num)
+		}
+	}
+	return len(tails)
+}
+
+func combinationSum(candidates []int, target int) [][]int {
+	// 尴尬 优化得还有bug
+	sort.Slice(candidates, func(i, j int) bool {
+		return candidates[i] < candidates[j]
+	})
+
+	ans := make([][]int, 0)
+	path := make([]int, 0)
+
+	var dfs func(wantedTarget, startIdx int)
+	dfs = func(wantedTarget, startIdx int) {
+		if wantedTarget == 0 {
+			ans = append(ans, append([]int(nil), path...))
+			return
+		}
+
+		if wantedTarget < candidates[startIdx] {
+			return
+		}
+
+		for i := startIdx; i < len(candidates); i++ {
+			// 都选不一样的
+			if i != startIdx && candidates[i] == candidates[i-1] {
+				continue
+			}
+			// 选择当前数
+			if wantedTarget-candidates[i] >= 0 {
+				path = append(path, candidates[i])
+				// 新的wanted target
+				// 复用当前数
+				dfs(wantedTarget-candidates[i], startIdx)
+				// 回溯
+				path = path[:len(path)-1]
+			}
+		}
+
+	}
+
+	dfs(target, 0)
+
+	return ans
+}
+
+func restoreIpAddresses(str string) []string {
+	ans := make([]string, 0)
+	segments := make([]int, 4)
+
+	convertToIPStr := func(segments []int) string {
+		ipStr := ""
+		for i := 0; i < len(segments); i++ {
+			if i == 0 {
+				ipStr += strconv.Itoa(segments[i])
+			} else {
+				ipStr += "." + strconv.Itoa(segments[i])
+			}
+		}
+		return ipStr
+	}
+
+	var dfs func(segId, segStart int)
+	dfs = func(segId, segStart int) {
+		if segId == 4 && segStart == len(str) {
+			ans = append(ans, convertToIPStr(segments))
+			return
+		}
+
+		if segId == 4 || segStart == len(str) {
+			return
+		}
+
+		// 不能有前导0，遇到就往下搜索
+		if str[segStart] == byte('0') {
+			segments[segId] = 0
+			dfs(segId+1, segStart+1)
+		} else {
+			segment := 0
+			for i := segStart; i < len(str); i++ {
+				segment = segment*10 + int(str[i]-byte('0'))
+				if segment <= 255 {
+					segments[segId] = segment
+					dfs(segId+1, i+1)
+				} else {
+					break
+				}
+			}
+		}
+	}
+
+	dfs(0, 0)
+
+	return ans
+}
+
+func longestCommonSubsequence(test1, test2 string) int {
+	m, n := len(test1), len(test2)
+	if m == 0 || n == 0 {
+		return 0
+	}
+
+	dp := make([][]int, m+1)
+	for idx := range dp {
+		dp[idx] = make([]int, n+1)
+	}
+
+	for i := 1; i <= m; i++ {
+		for j := 1; j <= n; j++ {
+			test1Idx := i - 1
+			test2Idx := j - 1
+			if test1[test1Idx] == test2[test2Idx] {
+				dp[i][j] = dp[i-1][j-1] + 1
+			} else {
+				dp[i][j] = max(dp[i-1][j], dp[i][j-1])
+			}
+		}
+	}
+
+	return dp[m][n]
+}
+
+func consecutiveNumbersSum(n int) int {
+	ans := 1
+	for k := 2; k*k < 2*n; k++ {
+		if (n-(k-1)*k/2)%k == 0 {
+			ans++
+		}
+	}
+	return ans
+}
+
+func solve(board [][]byte) {
+	mRow, nCol := len(board), len(board[0])
+
+	var dfs func(row, col int)
+	dfs = func(row, col int) {
+		if row < 0 || row >= mRow || col < 0 || col >= nCol {
+			return
+		}
+
+		if board[row][col] != 'O' {
+			return
+		}
+
+		board[row][col] = 'A'
+
+		dfs(row+1, col)
+		dfs(row-1, col)
+		dfs(row, col+1)
+		dfs(row, col-1)
+	}
+
+	for i := 0; i < mRow; i++ {
+		dfs(i, 0)
+		dfs(i, nCol-1)
+	}
+
+	for i := 0; i < nCol; i++ {
+		dfs(0, i)
+		dfs(mRow-1, i)
+	}
+
+	for row := 0; row < mRow; row++ {
+		for col := 0; col < nCol; col++ {
+			if board[row][col] == 'A' {
+				board[row][col] = 'O'
+			} else if board[row][col] == 'O' {
+				board[row][col] = 'X'
+			}
+		}
+	}
+}
+
+func hasPathSumIteration(root *TreeNode, target int) bool {
+	if root == nil {
+		return false
+	}
+
+	stack := make([]*TreeNode, 0)
+	sumStack := make([]int, 0)
+
+	stack = append(stack, root)
+	sumStack = append(sumStack, root.Val)
+
+	for len(stack) > 0 {
+		pop := stack[len(stack)-1]
+		stack = stack[:len(stack)-1]
+		sum := sumStack[len(sumStack)-1]
+		sumStack = sumStack[:len(sumStack)-1]
+
+		// 到达叶子且满足条件
+		if pop.Left == nil && pop.Right == nil && sum == target {
+			return true
+		}
+
+		if pop.Left != nil {
+			stack = append(stack, pop.Left)
+			sumStack = append(sumStack, sum+pop.Left.Val)
+		}
+
+		if pop.Right != nil {
+			stack = append(stack, pop.Right)
+			sumStack = append(sumStack, sum+pop.Right.Val)
+		}
+	}
+	return false
+}
+
+func pathSumIII(root *TreeNode, target int) (ans int) {
+	// 注意初始化
+	prefixSum := map[int]int{0: 1}
+	var dfs func(root *TreeNode, curSum int)
+
+	dfs = func(node *TreeNode, curSum int) {
+		if node == nil {
+			return
+		}
+
+		curSum += node.Val
+		wanted := curSum - target
+		ans += prefixSum[wanted]
+
+		prefixSum[curSum]++
+
+		dfs(node.Left, curSum)
+		dfs(node.Right, curSum)
+
+		prefixSum[curSum]--
+	}
+
+	dfs(root, 0)
+
+	return ans
+}
+
+func videoStitching(clips [][]int, T int) int {
+	// 结果中 同一个开头尽量选得最远 贪心
+	startIdxToFastestIdx := make([]int, T)
+	for _, clip := range clips {
+		start, end := clip[0], clip[1]
+		if start < T {
+			startIdxToFastestIdx[start] = max(startIdxToFastestIdx[start], end)
+		}
+	}
+
+	furthestRight := 0
+	preFurthestRight := 0
+	ans := 0
+	for i := 0; i < T; i++ {
+		furthestRight = max(furthestRight, startIdxToFastestIdx[i])
+		// 没有 i 位置开始的片段，并且之前开头的片段最远能到 i 这
+		if furthestRight == i {
+			return -1
+		}
+		// 满足贪心
+		if preFurthestRight == i {
+			ans++
+			preFurthestRight = furthestRight
+		}
+	}
+	return ans
+}

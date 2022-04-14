@@ -8,6 +8,7 @@ import (
 
 func goroutine1(ch chan int, wg *sync.WaitGroup) {
 	defer wg.Done()
+	defer close(ch)
 
 	for i := 1; i <= 100; i++ {
 		if i%2 == 1 {
@@ -16,13 +17,12 @@ func goroutine1(ch chan int, wg *sync.WaitGroup) {
 			ch <- i
 		}
 	}
-	close(ch)
 }
 
-func goroutine2(notify chan int, wg *sync.WaitGroup) {
+func goroutine2(ch chan int, wg *sync.WaitGroup) {
 	defer wg.Done()
 
-	for num := range notify {
+	for num := range ch {
 		fmt.Println("g_2 : " + strconv.Itoa(num))
 	}
 }
@@ -38,6 +38,7 @@ func printNum() {
 
 func work(receiveCh, sendCh chan int, symbol int, wg *sync.WaitGroup, n int) {
 	defer wg.Done()
+	defer close(sendCh)
 
 	for num := range receiveCh {
 		if num > n {
@@ -48,7 +49,6 @@ func work(receiveCh, sendCh chan int, symbol int, wg *sync.WaitGroup, n int) {
 		sendCh <- num + 1
 	}
 
-	close(sendCh)
 	fmt.Println("goroutine: finish", symbol)
 }
 
@@ -58,7 +58,7 @@ func printNumPlus(nGoroutine, n int) {
 
 	sendOrReceiveChs := make([]chan int, nGoroutine)
 	for i := 0; i < nGoroutine; i++ {
-		sendOrReceiveChs[i] = make(chan int)
+		sendOrReceiveChs[i] = make(chan int, 0)
 	}
 
 	for i := 0; i < nGoroutine; i++ {
@@ -72,5 +72,6 @@ func printNumPlus(nGoroutine, n int) {
 			receiveCh <- 1
 		})
 	}
+
 	wg.Wait()
 }
