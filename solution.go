@@ -3,9 +3,9 @@ package main
 import (
 	"fmt"
 	"math"
-	"math/rand"
 	"sort"
 	"strconv"
+	"strings"
 )
 
 func findContentChildren(g []int, s []int) int {
@@ -559,33 +559,6 @@ func twoSumV2(nums []int, target int) []int {
 func sortArray(nums []int) []int {
 	randomizedQuicksort(nums, 0, len(nums)-1)
 	return nums
-}
-
-func randomizedQuicksort(nums []int, left, right int) {
-	if left < right {
-		pos := randomizedPartition(nums, left, right)
-		randomizedQuicksort(nums, left, pos-1)
-		randomizedQuicksort(nums, pos+1, right)
-	}
-}
-
-func randomizedPartition(nums []int, left, right int) int {
-	r := rand.Intn(right-left+1) + left
-	swap(nums, r, right)
-	return partition(nums, left, right)
-}
-
-func partition(nums []int, left, right int) int {
-	pivot := nums[right]
-	swapIdx := left - 1
-	for j := left; j <= right-1; j++ {
-		if nums[j] <= pivot {
-			swapIdx++
-			swap(nums, swapIdx, j)
-		}
-	}
-	swap(nums, swapIdx+1, right)
-	return swapIdx + 1
 }
 
 func maxSubArray(nums []int) int {
@@ -1643,4 +1616,90 @@ func videoStitching(clips [][]int, T int) int {
 		}
 	}
 	return ans
+}
+
+func findMissingLatestK(arr []int, k int) int {
+	for i := range arr {
+		resetPositionOnce(i, arr, k)
+	}
+
+	return fetchLatestK(arr, k)
+}
+
+func fetchLatestK(arr []int, k int) int {
+	ans := k + len(arr) + 1
+
+	// 检查是否为交换过来的数，
+	// 这些交换过来的数，实则为大于k的数，并刚好塞在对应的间距
+	for idx := range arr {
+		if arr[idx] != k+idx+1 {
+			ans = k + idx + 1
+			break
+		}
+	}
+
+	return ans
+}
+
+func resetPositionOnce(i int, arr []int, k int) {
+	num := arr[i]
+	// 只用关注大于k的数
+	// 把大于k的数， 且与k的距离在len（arr）内的数，排在前头
+	for num > k && num-k <= len(arr) {
+		pos := num - k - 1
+		// 一路交换，直到所有触及到的，满足条件的num都换到前面
+		if arr[pos] == num {
+			return
+		}
+		arr[pos], num = num, arr[pos]
+	}
+}
+
+func findTargetSum(nums []int, target int) [][]int {
+	tempSet := make(map[int]struct{})
+	ans := make([][]int, 0)
+
+	for _, num := range nums {
+		wanted := target - num
+		if _, ok := tempSet[wanted]; ok {
+			ans = append(ans, []int{wanted, num})
+		}
+		tempSet[num] = struct{}{}
+	}
+	return ans
+}
+
+func ipToInt(ipStr string) int {
+	segments := strings.Split(ipStr, ".")
+	segment0, _ := strconv.Atoi(segments[0])
+	segment1, _ := strconv.Atoi(segments[1])
+	segment2, _ := strconv.Atoi(segments[2])
+	segment3, _ := strconv.Atoi(segments[3])
+
+	segment0 = segment0 << 24
+	segment1 = segment1 << 16
+	segment2 = segment2 << 8
+
+	fmt.Printf("%08b\n", segment0)
+	fmt.Printf("%08b\n", segment1)
+	fmt.Printf("%08b\n", segment2)
+	fmt.Printf("%08b\n", segment3)
+
+	return segment0 | segment1 | segment2 | segment3
+}
+
+func findKthLargest(nums []int, k int) int {
+	target := len(nums) - k
+	left, right := 0, len(nums)-1
+	for left <= right {
+		pivotIdx := partition(nums, left, right)
+		if pivotIdx == target {
+			return nums[target]
+		} else if pivotIdx < target {
+			left = pivotIdx + 1
+		} else {
+			right = pivotIdx - 1
+		}
+	}
+	return -1
 }

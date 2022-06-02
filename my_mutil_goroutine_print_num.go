@@ -32,6 +32,7 @@ func printNum() {
 	wg := new(sync.WaitGroup)
 	wg.Add(2)
 	go goroutine1(msg, wg)
+	
 	go goroutine2(msg, wg)
 	wg.Wait()
 }
