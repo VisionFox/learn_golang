@@ -32,7 +32,7 @@ func printNum() {
 	wg := new(sync.WaitGroup)
 	wg.Add(2)
 	go goroutine1(msg, wg)
-	
+
 	go goroutine2(msg, wg)
 	wg.Wait()
 }
@@ -75,4 +75,42 @@ func printNumPlus(nGoroutine, n int) {
 	}
 
 	wg.Wait()
+}
+
+func transferN(nGoroutines int) {
+	chs := make([]chan int, 0)
+	for i := 0; i < nGoroutines; i++ {
+		chs = append(chs, make(chan int, 0))
+	}
+
+	wg := new(sync.WaitGroup)
+	once := new(sync.Once)
+
+	for i := 0; i < nGoroutines; i++ {
+		in, out := chs[i], chs[(i+1)%nGoroutines]
+		wg.Add(1)
+		if i == nGoroutines-1 {
+			go transNum(in, out, true, wg)
+		} else {
+			go transNum(in, out, false, wg)
+		}
+
+		once.Do(func() {
+			in <- 0
+		})
+	}
+
+	wg.Wait()
+}
+
+func transNum(in, out chan int, isEnd bool, wg *sync.WaitGroup) {
+	defer wg.Done()
+	defer close(in)
+
+	n := <-in
+	println(n)
+
+	if !isEnd {
+		out <- n + 1
+	}
 }
