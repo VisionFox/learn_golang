@@ -1703,3 +1703,76 @@ func findKthLargest(nums []int, k int) int {
 	}
 	return -1
 }
+
+func checkInclusion(sub string, source string) bool {
+	if len(sub) > len(source) {
+		return false
+	}
+
+	var subCntArr, sourceWindowCntArr [26]int
+	windowSize := len(sub)
+	for i := 0; i < windowSize; i++ {
+		subCntArr[sub[i]-'a']++
+		sourceWindowCntArr[source[i]-'a']++
+	}
+
+	if subCntArr == sourceWindowCntArr {
+		return true
+	}
+
+	for i := len(sub); i < len(source); i++ {
+		sourceWindowCntArr[source[i]-'a']++
+		sourceWindowCntArr[source[i-windowSize]-'a']--
+
+		if sourceWindowCntArr == subCntArr {
+			return true
+		}
+	}
+
+	return false
+}
+
+func sortColors(nums []int) {
+	point0, point2 := 0, len(nums)-1
+	for i := point0; i < point2; i++ {
+		for i <= point2 && nums[i] == 2 {
+			nums[i], nums[point2] = nums[point2], nums[i]
+			point2--
+		}
+
+		// 这里不用for循环，原因是上层有个i++，并且此处无i++的话，point0空推进
+		if i <= point2 && nums[i] == 0 {
+			nums[i], nums[point0] = nums[point0], nums[i]
+			point0++
+		}
+	}
+}
+
+func multiply(num1 string, num2 string) string {
+	if "0" == num1 || "0" == num2 {
+		return "0"
+	}
+	m, n := len(num1), len(num2)
+	ansArr := make([]int, m+n)
+
+	for i := m - 1; i >= 0; i-- {
+		n1 := int(num1[i] - '0')
+		for j := n - 1; j >= 0; j-- {
+			n2 := int(num2[j] - '0')
+
+			sum := ansArr[i+j+1] + n1*n2
+			ansArr[i+j+1] = sum % 10
+			ansArr[i+j] += sum / 10
+		}
+	}
+
+	ans := ""
+	for i := 0; i < n+m; i++ {
+		if i == 0 && ansArr[i] == 0 {
+			continue
+		}
+		ans += strconv.Itoa(ansArr[i])
+	}
+
+	return ans
+}
