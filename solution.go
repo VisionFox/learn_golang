@@ -1776,3 +1776,37 @@ func multiply(num1 string, num2 string) string {
 
 	return ans
 }
+
+func findMaxLength(nums []int) int {
+	if len(nums) < 2 {
+		return 0
+	}
+
+	prefixSum := make([]int, len(nums)+1)
+	for i := 1; i <= len(nums); i++ {
+		var anotherNum int
+		if nums[i-1] == 0 {
+			anotherNum = -1
+		} else {
+			anotherNum = 1
+		}
+
+		prefixSum[i] = prefixSum[i-1] + anotherNum
+	}
+
+	ans := 0
+	m := make(map[int]int)
+	m[0] = 0
+	for i := 1; i <= len(nums); i++ {
+		curPrefixSum := prefixSum[i]
+		if v, ok := m[curPrefixSum]; ok {
+			ans = max(i-v, ans)
+		}
+
+		if _, ok := m[curPrefixSum]; !ok {
+			m[curPrefixSum] = i
+		}
+	}
+
+	return ans
+}
