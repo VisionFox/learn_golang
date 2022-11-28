@@ -1,4 +1,4 @@
-package main
+package handler
 
 import (
 	"errors"
@@ -128,7 +128,7 @@ func min(i, j int) int {
 	return i
 }
 
-func swap(nums []int, i, j int) {
+func Swap(nums []int, i, j int) {
 	t := nums[i]
 	nums[i] = nums[j]
 	nums[j] = t

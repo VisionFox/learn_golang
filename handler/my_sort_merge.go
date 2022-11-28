@@ -1,4 +1,4 @@
-package main
+package handler
 
 func mergeSort(nums []int) []int {
 	length := len(nums)

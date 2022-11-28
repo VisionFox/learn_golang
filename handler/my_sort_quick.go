@@ -1,6 +1,9 @@
-package main
+package handler
 
-import "math/rand"
+import (
+	"learn_golang"
+	"math/rand"
+)
 
 func randomizedQuicksort(nums []int, left, right int) {
 	if left < right {
@@ -12,7 +15,7 @@ func randomizedQuicksort(nums []int, left, right int) {
 
 func randomizedPartition(nums []int, left, right int) int {
 	r := rand.Intn(right-left+1) + left
-	swap(nums, r, left)
+	main.swap(nums, r, left)
 	return partition(nums, left, right)
 }
 
@@ -32,11 +35,11 @@ func partition(nums []int, left, right int) int {
 		}
 		// 交换
 		if leftMark < rightMark {
-			swap(nums, leftMark, rightMark)
+			main.swap(nums, leftMark, rightMark)
 		}
 	}
 	// 交换主元
-	swap(nums, leftMark, left)
+	main.swap(nums, leftMark, left)
 
 	return leftMark
 }
